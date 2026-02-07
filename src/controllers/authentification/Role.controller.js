@@ -1,4 +1,4 @@
-const Role = require("src/models/authentification/Role.model");
+const Role = require("../../models/authentification/Role.model");
 
 
 // 🔹 Créer un rôle

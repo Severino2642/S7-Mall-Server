@@ -9,7 +9,8 @@ const authentificationSchema = new mongoose.Schema(
         },
 
         idRole: {
-            type: Number,
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Role",
             required: true
         },
 
@@ -31,12 +32,12 @@ const authentificationSchema = new mongoose.Schema(
     }
 );
 
-module.exports = mongoose.model("Authentification", authentificationSchema);
-
-authentificationSchema.pre("save", async function(next) {
+// changement: utiliser un middleware async sans paramètre "next" — appeler next() provoquait "next is not a function" quand Mongoose traite le hook comme basé sur les promesses
+authentificationSchema.pre("save", async function() {
     if (this.isModified("mdp")) {
         const salt = await bcrypt.genSalt(10);
         this.mdp = await bcrypt.hash(this.mdp, salt);
     }
-    next();
 });
+
+module.exports = mongoose.model("Authentification", authentificationSchema);

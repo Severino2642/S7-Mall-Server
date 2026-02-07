@@ -3,7 +3,7 @@ const {
     createCentre,
     getCentres,
     getCentreById
-} = require("src/controllers/centre_commercial/centreCommercial.controller");
+} = require("../../controllers/centre_commercial/centreCommercial.controller");
 
 const router = express.Router();
 

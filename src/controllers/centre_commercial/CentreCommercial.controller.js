@@ -1,44 +1,36 @@
-const CentreCommercial = require("src/models/centre_commercial/centreCommercial.model");
-const Authentification = require("src/models/authentification/Authentification.model");
+const CentreCommercial = require("../../models/centre_commercial/centreCommercial.model");
+const Authentification = require("../../models/authentification/Authentification.model");
+const Role = require("../../models/authentification/Role.model");
 const mongoose = require("mongoose");
 // Créer un centre commercial
 exports.createCentre = async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
         const { identifiant, mdp, ...centreData } = req.body;
 
         if (!identifiant || !mdp) {
-            throw new Error("identifiant et mdp requis");
+            return res.status(400).json({ erreura: "identifiant et mdp requis" });
         }
 
-        const centre = await CentreCommercial.create(
-            [centreData],
-            { session }
-        );
+        // Création du centre commercial
+        const centre = new CentreCommercial(centreData);
+        await centre.save(); // hook 'pre save' du centre si existant
 
-        const auth = await Authentification.create(
-            [{
-                idUser: centre[0]._id,
-                idRole: 1, // rôle "centre commercial"
-                identifiant,
-                mdp
-            }],
-            { session }
-        );
-
-        await session.commitTransaction();
-        session.endSession();
+        // Création de l'authentification
+        const role = await Role.findById("698712f076c4f14d630bb34a"); // rôle "centre commercial"
+        const auth = new Authentification({
+            idUser: centre._id,
+            idRole: role._id, // rôle "centre commercial"
+            identifiant,
+            mdp // sera hashé automatiquement par le hook 'pre save'
+        });
+        await auth.save();
 
         res.status(201).json({
-            centre: centre[0],
-            authentification: auth[0]
+            centre: centre,
+            authentification: auth
         });
 
     } catch (err) {
-        await session.abortTransaction();
-        session.endSession();
         res.status(400).json({ error: err.message });
     }
 };

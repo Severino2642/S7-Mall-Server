@@ -45,12 +45,11 @@ const centreCommercialSchema = new mongoose.Schema(
     }
 );
 
-centreCommercialSchema.pre("save", function (next) {
+centreCommercialSchema.pre("save", async function() {
     if (!this._id) {
         const uniquePart = Date.now().toString(36); // simple et efficace
         this._id = `${prefixeId}${uniquePart}`;
     }
-    next();
 });
 
 module.exports = mongoose.model(

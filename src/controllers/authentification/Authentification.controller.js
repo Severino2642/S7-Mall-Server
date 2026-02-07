@@ -1,4 +1,4 @@
-const Authentification = require("src/models/authentification/Authentification.model");
+const Authentification = require("../../models/authentification/Authentification.model");
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
@@ -68,7 +68,7 @@ exports.loginWithRole = async (req, res) => {
                 $lookup: {
                     from: "role",
                     localField: "idRole",
-                    foreignField: "idRole",
+                    foreignField: "_id",
                     as: "role"
                 }
             },
@@ -84,7 +84,7 @@ exports.loginWithRole = async (req, res) => {
             }
         ]);
 
-        res.json(result[0]); // résultat unique
+        res.json(result); // résultat unique
 
     } catch (err) {
         res.status(500).json({ error: err.message });
