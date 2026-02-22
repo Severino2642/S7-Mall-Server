@@ -27,6 +27,7 @@ const bonDeCommandeRoutes = require('./routes/client/commande/BonDeCommande.rout
 const notificationsRoutes = require('./routes/notification/Notification.route');
 const managerRoutes = require('./routes/proprietaire/manager/Manager.route');
 const paymentLoyerRoutes = require('./routes/proprietaire/loyer/PaymentLoyer.route');
+const followerRoutes = require('./routes/followers/Follower.route');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -57,6 +58,7 @@ app.use("/api/bon_de_commande", bonDeCommandeRoutes);
 app.use("/api/notification", notificationsRoutes);
 app.use("/api/manager", managerRoutes);
 app.use("/api/payment_loyer", paymentLoyerRoutes);
+app.use("/api/follower", followerRoutes);
 // Connexion à MongoDB
 connectDB();
 

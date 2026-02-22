@@ -372,3 +372,93 @@ exports.getOffresDisponible = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
+exports.getOffresDisponibleByCentre = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await OffreDeLocation.aggregate([
+            {
+                $match: {
+                    "status": ConstanteEtat.DISPONIBLE
+                }
+            },
+            {
+                $lookup: {
+                    from: "boxe",
+                    localField: "idBoxe",
+                    foreignField: "_id",
+                    as: "boxeInfo"
+                }
+            },
+            {
+                $unwind: "$boxeInfo"
+            },
+            {
+                $match: {
+                    "boxeInfo.idCentreCommercial": id
+                }
+            },
+            {
+                $lookup: {
+                    from: "centre_commercial",
+                    localField: "boxeInfo.idCentreCommercial",
+                    foreignField: "_id",
+                    as: "centreInfo"
+                }
+            },
+            {
+                $unwind: "$centreInfo"
+            },
+            {
+                $lookup: {
+                    from: "file",
+                    let: { boxeId: "$boxeInfo._id" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: { $eq: ["$idProprietaire", "$$boxeId"] },
+                                idType: new mongoose.Types.ObjectId("69907176993485024f2c116d")
+                            }
+                        },
+                        { $sort: { date: -1 } }, // 👈 TRI PAR DATE DÉCROISSANTE (plus récent d'abord)
+                        { $limit: 1 } // 👈 PRENDRE SEULEMENT LA PREMIÈRE (la plus récente)
+                    ],
+                    as: "photoPrincipale"
+                }
+            },
+            {
+                $lookup: {
+                    from: "file",
+                    localField: "boxeInfo._id",
+                    foreignField: "idProprietaire",
+                    as: "toutesLesPhotos"
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    description: 1,
+                    montantLoyer: 1,
+                    date: 1,
+                    status: 1,
+                    idBoxe: "$boxeInfo._id",
+                    nomBoxe: "$boxeInfo.nom",
+                    longueurBoxe: "$boxeInfo.longueur",
+                    largeurBoxe: "$boxeInfo.largeur",
+                    idCentreCommercial: "$centreInfo._id",
+                    nomCentreCommercial: "$centreInfo.nom",
+                    photoBoxe: {
+                        $arrayElemAt: ["$photoPrincipale", 0]
+                    },
+                    autrePhoto: "$toutesLesPhotos",
+                }
+            }
+        ]);
+
+        res.json(result);
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};

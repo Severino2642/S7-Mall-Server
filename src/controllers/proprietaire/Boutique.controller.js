@@ -130,6 +130,14 @@ exports.getBoutiqueCPLById = async (req, res) => {
                 }
             },
             {
+                $lookup: {
+                    from: "followers",
+                    localField: "_id",
+                    foreignField: "idUser",
+                    as: "followerListe"
+                }
+            },
+            {
                 $project: {
                     _id: 1,
                     idDemandeLocation: 1,
@@ -152,6 +160,7 @@ exports.getBoutiqueCPLById = async (req, res) => {
                     pdc: {
                         $arrayElemAt: ["$photoCouverture", 0]
                     },
+                    followers: "$followerListe"
                 }
             }
         ]);
@@ -313,6 +322,14 @@ exports.getBoutiqueByIdCentreCommercial = async (req, res) => {
                 }
             },
             {
+                $lookup: {
+                    from: "followers",
+                    localField: "_id",
+                    foreignField: "idUser",
+                    as: "followerListe"
+                }
+            },
+            {
                 $project: {
                     _id: 1,
                     idDemandeLocation: 1,
@@ -335,6 +352,7 @@ exports.getBoutiqueByIdCentreCommercial = async (req, res) => {
                     pdc: {
                         $arrayElemAt: ["$photoCouverture", 0]
                     },
+                    followers: "$followerListe"
                 }
             }
         ]);

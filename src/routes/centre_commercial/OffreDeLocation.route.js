@@ -11,5 +11,6 @@ router.get("/centre/:idCentreCommercial", itemController.getOffresByCentre);
 router.get("/boxe/:idBoxe", itemController.getOffresByBoxe);
 router.get("/details/:id", itemController.getOffresCpl);
 router.get("/status/disponible", itemController.getOffresDisponible);
+router.get("/centre/status/disponible/:id", itemController.getOffresDisponibleByCentre);
 
 module.exports = router;
