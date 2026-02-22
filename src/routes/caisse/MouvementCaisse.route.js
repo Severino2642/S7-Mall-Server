@@ -10,6 +10,7 @@ router.delete('/:id', mouvementCaisseController.delete);
 router.get('/details/:id', mouvementCaisseController.getCplById);
 router.get('/proprietaire/:id', mouvementCaisseController.getCplByIdProprietaire);
 router.get('/caisse/:idCaisse', mouvementCaisseController.getAllByIdCaisse);
+router.get('/source/:id', mouvementCaisseController.getCplByIdSource);
 router.get('/valider/:id', mouvementCaisseController.valider);
 
 module.exports = router;

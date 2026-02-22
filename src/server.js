@@ -21,6 +21,12 @@ const clientRoutes = require('./routes/client/Client.route');
 const venteRoutes = require('./routes/proprietaire/vente/Vente.route');
 const caisseRoutes = require('./routes/caisse/Caisse.route');
 const mouvementCaisseRoutes = require('./routes/caisse/MouvementCaisse.route');
+const panierRoutes = require('./routes/client/panier/Panier.route');
+const commandeRoutes = require('./routes/client/commande/Commande.route');
+const bonDeCommandeRoutes = require('./routes/client/commande/BonDeCommande.route');
+const notificationsRoutes = require('./routes/notification/Notification.route');
+const managerRoutes = require('./routes/proprietaire/manager/Manager.route');
+const paymentLoyerRoutes = require('./routes/proprietaire/loyer/PaymentLoyer.route');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -45,6 +51,12 @@ app.use("/api/client", clientRoutes);
 app.use("/api/vente", venteRoutes);
 app.use("/api/caisse", caisseRoutes);
 app.use("/api/mouvement_caisse", mouvementCaisseRoutes);
+app.use("/api/panier", panierRoutes);
+app.use("/api/commande", commandeRoutes);
+app.use("/api/bon_de_commande", bonDeCommandeRoutes);
+app.use("/api/notification", notificationsRoutes);
+app.use("/api/manager", managerRoutes);
+app.use("/api/payment_loyer", paymentLoyerRoutes);
 // Connexion à MongoDB
 connectDB();
 

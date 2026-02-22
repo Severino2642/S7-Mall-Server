@@ -2,6 +2,7 @@ const Boutique = require("../../models/proprietaire/Boutique.model");
 const Boxe = require("../../models/centre_commercial/Boxe.model");
 const DemandeLocation = require("../../models/proprietaire/DemandeLocation.model");
 const {ConstanteEtat} = require("../../config/constante");
+const mongoose = require("mongoose");
 exports.create = async (req, res) => {
     try {
         const item = new Boutique(req.body);
@@ -95,6 +96,40 @@ exports.getBoutiqueCPLById = async (req, res) => {
                 $unwind: "$centreInfo"
             },
             {
+                $lookup: {
+                    from: "file",
+                    let: { produitId: "$_id" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: { $eq: ["$idProprietaire", "$$produitId"] },
+                                idType: new mongoose.Types.ObjectId("69907176993485024f2c116d")
+                            }
+                        },
+                        { $sort: { date: -1 } }, // 👈 TRI PAR DATE DÉCROISSANTE (plus récent d'abord)
+                        { $limit: 1 } // 👈 PRENDRE SEULEMENT LA PREMIÈRE (la plus récente)
+                    ],
+                    as: "photoPrincipale"
+                }
+            },
+            {
+                $lookup: {
+                    from: "file",
+                    let: { produitId: "$_id" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: { $eq: ["$idProprietaire", "$$produitId"] },
+                                idType: new mongoose.Types.ObjectId("699ad50b95739c29a87d14f9")
+                            }
+                        },
+                        { $sort: { date: -1 } }, // 👈 TRI PAR DATE DÉCROISSANTE (plus récent d'abord)
+                        { $limit: 1 } // 👈 PRENDRE SEULEMENT LA PREMIÈRE (la plus récente)
+                    ],
+                    as: "photoCouverture"
+                }
+            },
+            {
                 $project: {
                     _id: 1,
                     idDemandeLocation: 1,
@@ -110,7 +145,13 @@ exports.getBoutiqueCPLById = async (req, res) => {
                     date:1,
                     proprietaire:"$proprietaireInfo",
                     boxe:"$boxeInfo",
-                    centreCommercial:"$centreInfo"
+                    centreCommercial:"$centreInfo",
+                    pdp: {
+                        $arrayElemAt: ["$photoPrincipale", 0]
+                    },
+                    pdc: {
+                        $arrayElemAt: ["$photoCouverture", 0]
+                    },
                 }
             }
         ]);
@@ -187,9 +228,6 @@ exports.getBoutiqueByIdProprietaire = async (req, res) => {
                 }
             }
         ]);
-        if (result.length==0){
-            res.status(404).json({message:"Item introuvable"})
-        }
         res.json(result);
 
     } catch (err) {
@@ -241,6 +279,40 @@ exports.getBoutiqueByIdCentreCommercial = async (req, res) => {
                 $unwind: "$centreInfo"
             },
             {
+                $lookup: {
+                    from: "file",
+                    let: { produitId: "$_id" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: { $eq: ["$idProprietaire", "$$produitId"] },
+                                idType: new mongoose.Types.ObjectId("69907176993485024f2c116d")
+                            }
+                        },
+                        { $sort: { date: -1 } }, // 👈 TRI PAR DATE DÉCROISSANTE (plus récent d'abord)
+                        { $limit: 1 } // 👈 PRENDRE SEULEMENT LA PREMIÈRE (la plus récente)
+                    ],
+                    as: "photoPrincipale"
+                }
+            },
+            {
+                $lookup: {
+                    from: "file",
+                    let: { produitId: "$_id" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: { $eq: ["$idProprietaire", "$$produitId"] },
+                                idType: new mongoose.Types.ObjectId("699ad50b95739c29a87d14f9")
+                            }
+                        },
+                        { $sort: { date: -1 } }, // 👈 TRI PAR DATE DÉCROISSANTE (plus récent d'abord)
+                        { $limit: 1 } // 👈 PRENDRE SEULEMENT LA PREMIÈRE (la plus récente)
+                    ],
+                    as: "photoCouverture"
+                }
+            },
+            {
                 $project: {
                     _id: 1,
                     idDemandeLocation: 1,
@@ -256,13 +328,16 @@ exports.getBoutiqueByIdCentreCommercial = async (req, res) => {
                     date:1,
                     proprietaire:"$proprietaireInfo",
                     boxe:"$boxeInfo",
-                    centreCommercial:"$centreInfo"
+                    centreCommercial:"$centreInfo",
+                    pdp: {
+                        $arrayElemAt: ["$photoPrincipale", 0]
+                    },
+                    pdc: {
+                        $arrayElemAt: ["$photoCouverture", 0]
+                    },
                 }
             }
         ]);
-        if (result.length==0){
-            res.status(404).json({message:"Item introuvable"})
-        }
         res.json(result);
 
     } catch (err) {

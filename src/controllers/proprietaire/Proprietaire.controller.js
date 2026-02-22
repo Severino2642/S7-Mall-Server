@@ -8,7 +8,12 @@ exports.create = async (req, res) => {
         if (!identifiant || !mdp) {
             return res.status(400).json({ erreura: "identifiant et mdp requis" });
         }
-
+        if (identifiant && mdp) {
+            const old_auth = await Authentification.find({ identifiant:identifiant });
+            if (old_auth && old_auth.length > 0) {
+                return res.status(400).json({ message: "Identifiant invalide" });
+            }
+        }
         const item = new Proprietaire(itemData);
         await item.save();
 

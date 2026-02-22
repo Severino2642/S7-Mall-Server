@@ -1,25 +1,26 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
-const prefixeId = "v_";
+const prefixeId = "bcmd_";
 
-const venteSchema = new mongoose.Schema(
+const bonDeCommandeSchema = new mongoose.Schema(
     {
         _id: {
             type: String
-        },
-        idSource: {
-            type: String,
-        },
-        idBoutique: {
-            type: String,
-            required: true
         },
         idClient: {
             type: String,
             required: true
         },
-        designation: {
+        idCommande: {
             type: String,
+            required: true
+        },
+        idBoutique: {
+            type: String,
+            required: true
+        },
+        designation: {
+            type: String
         },
         date: {
             type: Date,
@@ -31,16 +32,16 @@ const venteSchema = new mongoose.Schema(
         }
     },
     {
-        collection:"vente",
-        timestamps:false
+        collection:"bon_de_commande",
+        timestamps:true
     }
 );
 
-venteSchema.pre("save", async function() {
+bonDeCommandeSchema.pre("save", async function() {
     if (!this._id) {
         const uniquePart = Date.now().toString(36); // simple et efficace
         this._id = `${prefixeId}${uniquePart}`;
     }
 });
 
-module.exports = mongoose.model("Vente", venteSchema);
+module.exports = mongoose.model('BonDeCommande', bonDeCommandeSchema);

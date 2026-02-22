@@ -11,6 +11,13 @@ exports.createCentre = async (req, res) => {
             return res.status(400).json({ erreura: "identifiant et mdp requis" });
         }
 
+        if (identifiant && mdp) {
+            const old_auth = await Authentification.find({ identifiant:identifiant });
+            if (old_auth && old_auth.length > 0) {
+                return res.status(400).json({ message: "Identifiant invalide" });
+            }
+        }
+
         // Création du centre commercial
         const centre = new CentreCommercial(centreData);
         await centre.save(); // hook 'pre save' du centre si existant

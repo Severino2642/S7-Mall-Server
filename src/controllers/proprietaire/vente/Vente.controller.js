@@ -4,7 +4,7 @@ const Stock = require("../../../models/proprietaire/stock/Stock.model");
 const StockDetails = require("../../../models/proprietaire/stock/StockDetails.model");
 const {ConstanteEtat} = require("../../../config/constante");
 const Produit = require("../../../models/proprietaire/produit/Produit.model");
-const {VenteEntity} = require("../../../models/proprietaire/vente/Vente.model");
+const {VenteService} = require("../../../services/vente/Vente.service");
 
 exports.insertMereFille = async (req, res) => {
     try {
@@ -150,6 +150,25 @@ exports.getCplById = async (req, res) => {
                 }
             },
             {
+                $lookup: {
+                    from: "mouvement_caisse",
+                    let: { sourceId: "$_id" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $eq: ["$idSource", "$$sourceId"] },
+                                        { $eq: ["$status", ConstanteEtat.VALIDER] }
+                                    ]
+                                }
+                            }
+                        }
+                    ],
+                    as: "payements"
+                }
+            },
+            {
                 $addFields: {
                     montantTotal: {
                         $sum: {
@@ -165,14 +184,37 @@ exports.getCplById = async (req, res) => {
                             }
                         }
                     },
+                    montantPayer: {
+                        $sum: "$payements.debit"
+                    },
                     quantiteTotal: {
                         $sum: "$filles.quantite"
+                    },
+                    montantRestant: {
+                        $subtract: [
+                            {
+                                $sum: {
+                                    $map: {
+                                        input: "$filles",
+                                        as: "fille",
+                                        in: {
+                                            $subtract: [
+                                                { $multiply: ["$$fille.prixUnitaire", "$$fille.quantite"] },
+                                                { $multiply: [{ $ifNull: ["$$fille.remise", 0] }, "$$fille.quantite"] }
+                                            ]
+                                        }
+                                    }
+                                }
+                            },
+                            { $sum: "$payements.debit" }
+                        ]
                     }
                 }
             },
             {
                 $project: {
                     _id: 1,
+                    idSource: 1,
                     idBoutique: 1,
                     idClient: 1,
                     designation: 1,
@@ -180,6 +222,8 @@ exports.getCplById = async (req, res) => {
                     status:1,
                     montantTotal: 1,
                     quantiteTotal:1,
+                    montantPayer:1,
+                    montantRestant:1,
                     client: "$clientInfo",
                     filles: "$filles"
                 }
@@ -223,6 +267,14 @@ exports.getCplByIdBoutique = async (req, res) => {
                 }
             },
             {
+                $lookup: {
+                    from: "mouvement_caisse",
+                    localField: "_id",
+                    foreignField: "idSource",
+                    as: "payements"
+                }
+            },
+            {
                 $addFields: {
                     montantTotal: {
                         $sum: {
@@ -238,14 +290,37 @@ exports.getCplByIdBoutique = async (req, res) => {
                             }
                         }
                     },
+                    montantPayer: {
+                        $sum: "$payements.debit"
+                    },
                     quantiteTotal: {
                         $sum: "$filles.quantite"
+                    },
+                    montantRestant: {
+                        $subtract: [
+                            {
+                                $sum: {
+                                    $map: {
+                                        input: "$filles",
+                                        as: "fille",
+                                        in: {
+                                            $subtract: [
+                                                { $multiply: ["$$fille.prixUnitaire", "$$fille.quantite"] },
+                                                { $multiply: [{ $ifNull: ["$$fille.remise", 0] }, "$$fille.quantite"] }
+                                            ]
+                                        }
+                                    }
+                                }
+                            },
+                            { $sum: "$payements.debit" }
+                        ]
                     }
                 }
             },
             {
                 $project: {
                     _id: 1,
+                    idSource: 1,
                     idBoutique: 1,
                     idClient: 1,
                     designation: 1,
@@ -253,6 +328,8 @@ exports.getCplByIdBoutique = async (req, res) => {
                     status:1,
                     montantTotal: 1,
                     quantiteTotal:1,
+                    montantPayer:1,
+                    montantRestant:1,
                     client: "$clientInfo",
                     filles: "$filles"
                 }
@@ -324,11 +401,117 @@ exports.valider = async (req, res) => {
         const item = await Mere.findById(id);
         if (!item) return res.status(404).json({ message: "Item introuvable" });
 
-        // await VenteEntity.genererMouvementStock(item,null);
+        await VenteService.genererMouvementStock(item,null);
 
         item.status = ConstanteEtat.VALIDER;
         await item.save();
         res.json(item);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+exports.getCplByIdSource = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await Mere.aggregate([
+            {
+                $match: {
+                    "idSource": id
+                }
+            },
+            {
+                $lookup: {
+                    from: "client",
+                    localField: "idClient",
+                    foreignField: "_id",
+                    as: "clientInfo"
+                }
+            },
+            {
+                $unwind: "$clientInfo"
+            },
+            {
+                $lookup: {
+                    from: "vente_details",
+                    localField: "_id",
+                    foreignField: "idMere",
+                    as: "filles"
+                }
+            },
+            {
+                $lookup: {
+                    from: "mouvement_caisse",
+                    localField: "_id",
+                    foreignField: "idSource",
+                    as: "payements"
+                }
+            },
+            {
+                $addFields: {
+                    montantTotal: {
+                        $sum: {
+                            $map: {
+                                input: "$filles",
+                                as: "fille",
+                                in: {
+                                    $subtract: [
+                                        { $multiply: ["$$fille.prixUnitaire", "$$fille.quantite"] },
+                                        { $multiply: [{ $ifNull: ["$$fille.remise", 0] }, "$$fille.quantite"] }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    montantPayer: {
+                        $sum: "$payements.debit"
+                    },
+                    quantiteTotal: {
+                        $sum: "$filles.quantite"
+                    },
+                    montantRestant: {
+                        $subtract: [
+                            {
+                                $sum: {
+                                    $map: {
+                                        input: "$filles",
+                                        as: "fille",
+                                        in: {
+                                            $subtract: [
+                                                { $multiply: ["$$fille.prixUnitaire", "$$fille.quantite"] },
+                                                { $multiply: [{ $ifNull: ["$$fille.remise", 0] }, "$$fille.quantite"] }
+                                            ]
+                                        }
+                                    }
+                                }
+                            },
+                            { $sum: "$payements.debit" }
+                        ]
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    idSource: 1,
+                    idBoutique: 1,
+                    idClient: 1,
+                    designation: 1,
+                    date: 1,
+                    status:1,
+                    montantTotal: 1,
+                    quantiteTotal:1,
+                    montantPayer:1,
+                    montantRestant:1,
+                    client: "$clientInfo",
+                    filles: "$filles"
+                }
+            }
+        ]);
+
+        res.json(result);
+
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

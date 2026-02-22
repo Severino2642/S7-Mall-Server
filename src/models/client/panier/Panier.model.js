@@ -1,46 +1,45 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
-const prefixeId = "v_";
+const prefixeId = "panier_";
 
-const venteSchema = new mongoose.Schema(
+const panierSchema = new mongoose.Schema(
     {
         _id: {
             type: String
-        },
-        idSource: {
-            type: String,
-        },
-        idBoutique: {
-            type: String,
-            required: true
         },
         idClient: {
             type: String,
             required: true
         },
-        designation: {
+        idProduit: {
             type: String,
+            required: true
+        },
+        quantite: {
+            type: Number,
+            default: 1,
+            min: 1
+        },
+        remarque: {
+            type: String,
+            trim: true
         },
         date: {
             type: Date,
             default: Date.now
-        },
-        status: {
-            type: Number,
-            default: 1
         }
     },
     {
-        collection:"vente",
-        timestamps:false
+        collection:"paniers",
+        timestamps:true
     }
 );
 
-venteSchema.pre("save", async function() {
+panierSchema.pre("save", async function() {
     if (!this._id) {
         const uniquePart = Date.now().toString(36); // simple et efficace
         this._id = `${prefixeId}${uniquePart}`;
     }
 });
 
-module.exports = mongoose.model("Vente", venteSchema);
+module.exports = mongoose.model('Panier', panierSchema);

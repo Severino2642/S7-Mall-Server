@@ -160,3 +160,46 @@ exports.valider = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
+
+exports.getCplByIdSource = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await MouvementCaisse.aggregate([
+            {
+                $match: {
+                    "idSource": id
+                }
+            },
+            {
+                $lookup: {
+                    from: "caisse",
+                    localField: "idCaisse",
+                    foreignField: "_id",
+                    as: "caisseInfo"
+                }
+            },
+            {
+                $unwind: "$caisseInfo"
+            },
+            {
+                $project: {
+                    _id: 1,
+                    idCaisse:1,
+                    idSource:1,
+                    designation: 1,
+                    debit: 1,
+                    credit: 1,
+                    status:1,
+                    date: 1,
+                    caisse: "$caisseInfo"
+                }
+            }
+        ]);
+
+        res.json(result);
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};

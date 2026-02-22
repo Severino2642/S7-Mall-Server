@@ -253,7 +253,7 @@ exports.getProduitCplByIdBoutique = async (req, res) => {
                 {
                     $lookup: {
                         from: "file",
-                        let: { produitId: "_id" },
+                        let: { produitId: "$_id" },
                         pipeline: [
                             {
                                 $match: {
@@ -336,7 +336,7 @@ exports.getProduitCplByIdBoutique = async (req, res) => {
                 {
                     $lookup: {
                         from: "file",
-                        let: { produitId: "_id" },
+                        let: { produitId: "$_id" },
                         pipeline: [
                             {
                                 $match: {
@@ -448,7 +448,7 @@ exports.getProduitCplByIdCentreCommercial = async (req, res) => {
                 {
                     $lookup: {
                         from: "file",
-                        let: { produitId: "_id" },
+                        let: { produitId: "$_id" },
                         pipeline: [
                             {
                                 $match: {
@@ -541,7 +541,7 @@ exports.getProduitCplByIdCentreCommercial = async (req, res) => {
                 {
                     $lookup: {
                         from: "file",
-                        let: { produitId: "_id" },
+                        let: { produitId: "$_id" },
                         pipeline: [
                             {
                                 $match: {
@@ -601,6 +601,229 @@ exports.changerStatus = async (req, res) => {
         item.status = status;
         await item.save();
         res.json(item);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+exports.getProduitCplForClient = async (req, res) => {
+    try {
+        let result;
+
+        result = await Produit.aggregate([
+            {
+                $match: {
+                    "status": ConstanteEtat.DISPONIBLE
+                }
+            },
+            {
+                $lookup: {
+                    from: "boutique",
+                    localField: "idBoutique",
+                    foreignField: "_id",
+                    as: "boutiqueInfo"
+                }
+            },
+            {
+                $unwind: "$boutiqueInfo"
+            },
+            {
+                $lookup: {
+                    from: "boxe",
+                    localField: "boutiqueInfo.idBoxe",
+                    foreignField: "_id",
+                    as: "boxeInfo"
+                }
+            },
+            {
+                $unwind: "$boxeInfo"
+            },
+            {
+                $lookup: {
+                    from: "categorie",
+                    localField: "idCategorie",
+                    foreignField: "_id",
+                    as: "categorieInfo"
+                }
+            },
+            {
+                $unwind: "$categorieInfo"
+            },
+            {
+                $lookup: {
+                    from: "produit_variante",
+                    localField: "_id",
+                    foreignField: "idProduit",
+                    as: "produitVariantes"
+                }
+            },
+            {
+                $lookup: {
+                    from: "file",
+                    let: { produitId: "$_id" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: { $eq: ["$idProprietaire", "$$produitId"] },
+                                idType: new mongoose.Types.ObjectId("69907176993485024f2c116d")
+                            }
+                        },
+                        { $sort: { date: -1 } }, // 👈 TRI PAR DATE DÉCROISSANTE (plus récent d'abord)
+                        { $limit: 1 } // 👈 PRENDRE SEULEMENT LA PREMIÈRE (la plus récente)
+                    ],
+                    as: "photoPrincipale"
+                }
+            },
+            {
+                $lookup: {
+                    from: "file",
+                    localField: "_id",
+                    foreignField: "idProprietaire",
+                    as: "toutesLesPhotos"
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    idBoutique: 1,
+                    idCategorie: 1,
+                    nom: 1,
+                    description: 1,
+                    prix: 1,
+                    quantite: 1,
+                    status:1,
+                    idCentreCommercial:"$boxeInfo.idCentreCommercial",
+                    boutique: "$boutiqueInfo",
+                    categorie: "$categorieInfo",
+                    variantes: "$produitVariantes",
+                    photo: {
+                        $arrayElemAt: ["$photoPrincipale", 0]
+                    },
+                    autrePhoto: "$toutesLesPhotos",
+                }
+            }
+        ]);
+
+        res.json(result);
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+exports.getProduitCplByIdForClient = async (req, res) => {
+    try {
+        const {id} = req.params;
+        let result;
+
+        result = await Produit.aggregate([
+            {
+                $match: {
+                    "_id": id
+                }
+            },
+            {
+                $lookup: {
+                    from: "boutique",
+                    localField: "idBoutique",
+                    foreignField: "_id",
+                    as: "boutiqueInfo"
+                }
+            },
+            {
+                $unwind: "$boutiqueInfo"
+            },
+            {
+                $lookup: {
+                    from: "boxe",
+                    localField: "boutiqueInfo.idBoxe",
+                    foreignField: "_id",
+                    as: "boxeInfo"
+                }
+            },
+            {
+                $unwind: "$boxeInfo"
+            },
+            {
+                $lookup: {
+                    from: "centre_commercial",
+                    localField: "boxeInfo.idCentreCommercial",
+                    foreignField: "_id",
+                    as: "centreInfo"
+                }
+            },
+            {
+                $unwind: "$centreInfo"
+            },
+            {
+                $lookup: {
+                    from: "categorie",
+                    localField: "idCategorie",
+                    foreignField: "_id",
+                    as: "categorieInfo"
+                }
+            },
+            {
+                $unwind: "$categorieInfo"
+            },
+            {
+                $lookup: {
+                    from: "produit_variante",
+                    localField: "_id",
+                    foreignField: "idProduit",
+                    as: "produitVariantes"
+                }
+            },
+            {
+                $lookup: {
+                    from: "file",
+                    let: { produitId: "$_id" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: { $eq: ["$idProprietaire", "$$produitId"] },
+                                idType: new mongoose.Types.ObjectId("69907176993485024f2c116d")
+                            }
+                        },
+                        { $sort: { date: -1 } }, // 👈 TRI PAR DATE DÉCROISSANTE (plus récent d'abord)
+                        { $limit: 1 } // 👈 PRENDRE SEULEMENT LA PREMIÈRE (la plus récente)
+                    ],
+                    as: "photoPrincipale"
+                }
+            },
+            {
+                $lookup: {
+                    from: "file",
+                    localField: "_id",
+                    foreignField: "idProprietaire",
+                    as: "toutesLesPhotos"
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    idBoutique: 1,
+                    idCategorie: 1,
+                    nom: 1,
+                    description: 1,
+                    prix: 1,
+                    quantite: 1,
+                    status:1,
+                    idCentreCommercial:"$boxeInfo.idCentreCommercial",
+                    centreCommercial:"$centreInfo",
+                    boutique: "$boutiqueInfo",
+                    categorie: "$categorieInfo",
+                    variantes: "$produitVariantes",
+                    photo: {
+                        $arrayElemAt: ["$photoPrincipale", 0]
+                    },
+                    autrePhoto: "$toutesLesPhotos",
+                }
+            }
+        ]);
+
+        res.json(result[0]);
+
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

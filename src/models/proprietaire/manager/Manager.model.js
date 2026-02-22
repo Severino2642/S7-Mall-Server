@@ -1,46 +1,48 @@
-const mongoose = require("mongoose");
+const mogoonse = require('mongoose');
 
-const prefixeId = "v_";
+const prefixeId = "mng_";
 
-const venteSchema = new mongoose.Schema(
+const managerSchema = new mogoonse.Schema(
     {
         _id: {
             type: String
         },
-        idSource: {
-            type: String,
-        },
         idBoutique: {
             type: String,
-            required: true
         },
-        idClient: {
-            type: String,
-            required: true
-        },
-        designation: {
+        nom: {
             type: String,
         },
-        date: {
-            type: Date,
-            default: Date.now
+        prenom: {
+            type: String,
+            required: true,
+        },
+        contact: {
+            type: String,
+        },
+        email: {
+            type: String,
         },
         status: {
             type: Number,
             default: 1
+        },
+        date: {
+            type: Date,
+            default: Date.now
         }
     },
     {
-        collection:"vente",
+        collection:"manager",
         timestamps:false
     }
 );
 
-venteSchema.pre("save", async function() {
+managerSchema.pre("save", async function() {
     if (!this._id) {
         const uniquePart = Date.now().toString(36); // simple et efficace
         this._id = `${prefixeId}${uniquePart}`;
     }
 });
 
-module.exports = mongoose.model("Vente", venteSchema);
+module.exports = mogoonse.model("Manager", managerSchema);

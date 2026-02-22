@@ -11,5 +11,5 @@ router.get("/boutique/:id", controller.getCplByIdBoutique);
 router.get("/valider/:id", controller.valider);
 router.delete('/:id', controller.deleteMereEtFilles);
 router.get("/filles/:idMere",controller.getFilleByIdMere);
-
+router.get("/source/:id", controller.getCplByIdSource);
 module.exports = router;

@@ -12,5 +12,6 @@ router.get("/details/:id", controller.getProduitCplById);
 router.get("/boutique/:idBoutique", controller.getProduitCplByIdBoutique);
 router.get("/centre/:idCentreCommercial", controller.getProduitCplByIdCentreCommercial);
 router.get("/changerStatus/:id", controller.changerStatus);
-
+router.get("/client", controller.getProduitCplForClient);
+router.get("/client/details/:id", controller.getProduitCplByIdForClient);
 module.exports = router;

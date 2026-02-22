@@ -7,12 +7,17 @@ exports.create = async (req, res) => {
     try {
         const { identifiant, mdp, ...itemData } = req.body;
 
-
+        if (identifiant && mdp) {
+            const old_auth = await Authentification.find({ identifiant:identifiant });
+            if (old_auth && old_auth.length > 0) {
+                return res.status(400).json({ message: "Identifiant invalide" });
+            }
+        }
         const item = new Client(itemData);
         await item.save();
 
         if (identifiant && mdp) {
-            const role = await Role.findById("698eea244745979d464f47b3"); // rôle "centre commercial"
+            const role = await Role.findById("6997524d1b3338f7421d256c"); // rôle "centre commercial"
             const auth = new Authentification({
                 idUser: item._id,
                 idRole: role._id,
@@ -23,7 +28,7 @@ exports.create = async (req, res) => {
         }
         res.status(201).json(item);
     } catch (err) {
-        res.status(400).json({ error: err.message });
+        res.status(400).json({ message: err.message });
     }
 };
 
@@ -48,8 +53,17 @@ exports.getById = async (req, res) => {
 
 exports.getByIdBoutique = async (req, res) => {
     try {
-        const item = await Client.find({idBoutique:req.params.id});
-        res.json(item);
+        const boutiqueId = req.params.id;
+        const BonDeCommande = require("../../models/client/commande/BonDeCommande.model");
+
+        const directClients = await Client.find({ idBoutique: boutiqueId });
+
+        const venteClientIds = await BonDeCommande.distinct("idClient", { idBoutique: boutiqueId });
+        const directIds = new Set(directClients.map(c => c._id.toString()));
+        const missingIds = venteClientIds.filter(id => !directIds.has(id.toString()));
+        const venteClients = missingIds.length ? await Client.find({ _id: { $in: missingIds } }) : [];
+
+        res.json([...directClients, ...venteClients]);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
