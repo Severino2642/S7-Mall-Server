@@ -32,8 +32,33 @@ const locationBoxeRoutes = require('./routes/proprietaire/LocationBoxe.route');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Configuration CORS détaillée
+const corsOptions = {
+    origin: [
+        'https://s7-mall-client-v2.vercel.app',  // Votre frontend en production
+        'http://localhost:4200',                  // Angular en développement
+        'http://localhost:3000',                   // Autre environnement dev
+        'https://s7-mall-management-server.vercel.app'  // Votre backend
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        'X-Requested-With',
+        'Accept',
+        'Origin'
+    ],
+    exposedHeaders: ['Content-Range', 'X-Content-Range'],
+    credentials: true,  // Important si vous utilisez des cookies/sessions
+    optionsSuccessStatus: 200,
+    preflightContinue: false,
+    maxAge: 86400  // Cache les résultats OPTIONS pendant 24h
+};
+
+app.use(cors(corsOptions));
+
 // Middleware
-app.use(cors());
+// app.use(cors());
 app.use(express.json());
 app.use("/api/centre", centreCommercialRoutes);
 app.use("/api/authentification", authRoutes);
