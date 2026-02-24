@@ -1,0 +1,19 @@
+const express = require("express");
+const controller = require("../../controllers/centre_commercial/centreCommercial.controller");
+
+const router = express.Router();
+
+// ➕ Créer un centre commercial
+router.post("/", controller.createCentre);
+
+// 📄 Lister tous les centres commerciaux
+router.get("/", controller.getCentres);
+
+// 🔍 Récupérer un centre par ID
+router.get("/:id", controller.getCentreById);
+router.put("/:id", controller.update);
+router.get("/ouvrir/:id", controller.ouvrir);
+router.get("/fermer/:id", controller.fermer);
+router.get("/details/:id", controller.getCPLById);
+
+module.exports = router;
