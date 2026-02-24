@@ -1,26 +1,5 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "src/server.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "src/server.js"
-    }
-  ],
-  "git": {
-    "deploymentEnabled": {
-      "main": true
-    }
-  },
-  "github": {
-    "silent": true,
-    "autoJobCancelation": true
-  },
   "headers": [
     {
       "source": "/api/(.*)",
