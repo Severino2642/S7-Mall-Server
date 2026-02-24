@@ -40,7 +40,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // Preflight pour toutes les routes
+app.options(/.*/, cors(corsOptions)); // Preflight pour toutes les routes (Express 5)
 
 // Middleware
 app.use(express.json());
