@@ -32,16 +32,16 @@ const locationBoxeRoutes = require('./routes/proprietaire/LocationBoxe.route');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-const corsOptions = {
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  credentials: false,
-  optionsSuccessStatus: 200
-};
+// const corsOptions = {
+//   origin: '*',
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+//   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+//   credentials: false,
+//   optionsSuccessStatus: 200
+// };
 
-app.use(cors(corsOptions));
-app.options(/.*/, cors(corsOptions)); // Preflight pour toutes les routes (Express 5)
+// app.use(cors(corsOptions));
+// app.options(/.*/, cors(corsOptions)); // Preflight pour toutes les routes (Express 5)
 
 // Middleware
 app.use(express.json());
