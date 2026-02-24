@@ -57,6 +57,9 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+// Gérer les requêtes preflight OPTIONS explicitement
+app.options('*', cors(corsOptions));
+
 // Middleware
 // app.use(cors());
 app.use(express.json());
