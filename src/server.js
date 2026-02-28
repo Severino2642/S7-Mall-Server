@@ -29,54 +29,55 @@ const managerRoutes = require('./routes/proprietaire/manager/Manager.route');
 const paymentLoyerRoutes = require('./routes/proprietaire/loyer/PaymentLoyer.route');
 const followerRoutes = require('./routes/followers/Follower.route');
 const locationBoxeRoutes = require('./routes/proprietaire/LocationBoxe.route');
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Configuration CORS - Version simplifiée pour Render
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Liste des origines autorisées
-    const allowedOrigins = [
-      'http://localhost:4200',
-      'http://localhost:3000',
-      'https://s7-mall-client-v2.vercel.app', // Mettez votre frontend URL
-      'https://s7-mall-management-server.vercel.app'
-    ];
-    
-    // Permettre les requêtes sans origin (comme les appels server-to-server)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
-      callback(null, true);
-    } else {
-      console.log('Origin bloquée:', origin);
-      callback(new Error('Non autorisé par CORS'));
-    }
-  },
+  // origin: function (origin, callback) {
+  //   // Liste des origines autorisées
+  //   const allowedOrigins = [
+  //     'http://localhost:4200',
+  //     'http://localhost:3000',
+  //     'https://s7-mall-client-v2.vercel.app',
+  //     // Ajoute l'URL de ton frontend si différent
+  //   ];
+  //
+  //   // Permettre les requêtes sans origin (comme les appels server-to-server)
+  //   if (!origin) return callback(null, true);
+  //
+  //   if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+  //     callback(null, true);
+  //   } else {
+  //     console.log('Origin bloquée:', origin);
+  //     callback(new Error('Non autorisé par CORS'));
+  //   }
+  // },
+  origin:'*', // Permet toutes les origines (à utiliser avec précaution en production)
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  credentials: true, // Maintenant c'est cohérent avec allowedOrigins spécifiques
-  optionsSuccessStatus: 200,
-  preflightContinue: false
+  credentials: false,
+  optionsSuccessStatus: 200
 };
 
-// Appliquer CORS à toutes les routes
+// Middleware
 app.use(cors(corsOptions));
+app.use(express.json());
 
-// Middleware pour logger les requêtes (debug)
+// Logger pour debug (optionnel en production)
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path} - Origin: ${req.headers.origin}`);
   next();
 });
 
-
-// Middleware
-app.use(express.json());
+// Routes
 app.use("/api/centre", centreCommercialRoutes);
 app.use("/api/authentification", authRoutes);
 app.use("/api/role", roleRoutes);
 app.use("/api/boxe", boxeRoutes);
-app.use("/api/offre",offreRoutes);
-app.use("/api/proprietaire",proprietaireRoutes);
+app.use("/api/offre", offreRoutes);
+app.use("/api/proprietaire", proprietaireRoutes);
 app.get('/api/imagekit/auth', getAuthParams);
 app.use("/api/filetype", fileTypeRoutes);
 app.use("/api/file", fileRoutes);
@@ -110,10 +111,15 @@ app.use((err, req, res, next) => {
 // Connexion à MongoDB
 connectDB();
 
-// Démarrer le serveur (local)
-if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => console.log(`Serveur démarré sur le port ${PORT}`));
+// 🌟 DÉMARRAGE DU SERVEUR POUR RENDER (MODIFICATION ICI) 🌟
+if (require.main === module) {
+  // Si ce fichier est exécuté directement (pas importé)
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ Serveur Render démarré sur le port ${PORT}`);
+    console.log(`🌍 Acceptant les connexions sur toutes les interfaces`);
+    console.log(`🚀 Environnement: ${process.env.NODE_ENV || 'development'}`);
+  });
 }
 
-// Export pour Vercel serverless
+// Export pour éventuel usage serverless (optionnel, gardé pour compatibilité)
 module.exports = app;
